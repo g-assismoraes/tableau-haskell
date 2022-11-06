@@ -10,6 +10,10 @@ splitAt' n (x : xs)
   where
     (xs', xs'') = splitAt' (n - 1) xs
 
+removeInconveniences :: String -> String
+removeInconveniences " " = ""
+removeInconveniences a = [e | e<-a, e /= ' ', e /= '-']
+
 splitAux:: Int -> Int -> Int -> [Char] -> Int
 splitAux _ _ _  [] = -1
 splitAux a b i (x:xs) 
@@ -50,7 +54,7 @@ main = do
     
     entrada <- getLine
 
-    let a = "~(" ++ entrada ++ ")"
+    let a = removeInconveniences ("~(" ++ entrada ++ ")")
 
     let node = Node [a] Empty Empty True
     print (head(head (formula node)))
