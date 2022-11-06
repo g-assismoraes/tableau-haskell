@@ -32,14 +32,39 @@ data Node =
 makeTree:: Node -> Node
 makeTree Empty = Empty
 makeTree a = 
-    if (head(head (formula a))) == '~' then Node ((formula a) ++
-                                                    [(fst (splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a)))))] ++ 
-                                                    [(tail (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a))))))])
-                                                 Empty
-                                                 Empty
-                                                 False 
+    if (head(head (formula a))) == '~' then case head (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a))))) of
+                                                                                                                                          '|' -> Node ((formula a) ++
+                                                                                                                                                   ["~" ++ (tail(fst (splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))))] ++ 
+                                                                                                                                                   ["~" ++ (init(tail (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))))])
+                                                                                                                                                Empty
+                                                                                                                                                Empty
+                                                                                                                                                True
+                                                                                                                                          '>' -> Node ((formula a) ++
+                                                                                                                                                   [(tail(fst (splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))))] ++ 
+                                                                                                                                                   ["~" ++ (init(tail (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))))])
+                                                                                                                                                Empty
+                                                                                                                                                Empty
+                                                                                                                                                True
+                                                                                                                                          '&' -> Node (formula a)
+                                                                                                                                                (Node ["~" ++ (tail(fst (splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))))] Empty Empty True)
+                                                                                                                                                (Node ["~" ++ (init(tail (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))))] Empty Empty True)
+                                                                                                                                                False
     else 
-        Node [" "] Empty Empty True
+        case head (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a)))) of
+                                                                                                                                          '&' -> Node ((formula a) ++
+                                                                                                                                                   [(tail(fst (splitAt (splitAux 0 0 0 (head(formula a))) (head(formula a)))))] ++ 
+                                                                                                                                                   [(init(tail (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a))))))])
+                                                                                                                                                Empty
+                                                                                                                                                Empty
+                                                                                                                                                True
+                                                                                                                                          '>' -> Node (formula a)
+                                                                                                                                                (Node ["~" ++ (tail(fst (splitAt (splitAux 0 0 0 (head(formula a))) (head(formula a)))))] Empty Empty True)
+                                                                                                                                                (Node [(init(tail (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a))))))] Empty Empty True)
+                                                                                                                                                False
+                                                                                                                                          '|' -> Node (formula a)
+                                                                                                                                                (Node [(tail(fst (splitAt (splitAux 0 0 0 (head(formula a))) (head(formula a)))))] Empty Empty True)
+                                                                                                                                                (Node [(init(tail (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a))))))] Empty Empty True)
+                                                                                                                                                False
 
  --splitAt (splitAux 0 0 0 (tail  (formula a))) (tail (formula a))
         
@@ -50,10 +75,9 @@ main = do
     
     entrada <- getLine
 
-    let a = "~(" ++ entrada ++ ")"
+    let a = "(" ++ entrada ++ ")"
 
     let node = Node [a] Empty Empty True
-    print (head(head (formula node)))
     let tree = makeTree node 
     print a
     print tree
