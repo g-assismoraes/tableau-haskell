@@ -36,7 +36,8 @@ data Node =
 makeTree:: Node -> Node
 makeTree Empty = Empty
 makeTree a = 
-    if (head(head (formula a))) == '~' then case head (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a))))) of
+    if ((head(head (formula a))) == '~') && 
+        ((head(tail(head (formula a)))) == '(')  then case head (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a))))) of
                                                                                                                                           '|' -> Node ((formula a) ++
                                                                                                                                                    ["~" ++ (tail(fst (splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))))] ++ 
                                                                                                                                                    ["~" ++ (init(tail (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))))])
@@ -54,7 +55,8 @@ makeTree a =
                                                                                                                                                 (Node ["~" ++ (init(tail (snd(splitAt (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))))] Empty Empty True)
                                                                                                                                                 False
     else 
-        case head (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a)))) of
+        if ((head(head (formula a))) == '~') && ((head(tail(head (formula a)))) == '~') then Node ((formula a) ++ (formula (makeTree (Node [(tail (tail (head (formula a))))] (esq a) (dir a) (isLeaf a))))) (esq (makeTree (Node [(tail (tail (head (formula a))))] (esq a) (dir a) (isLeaf a)))) (dir (makeTree (Node [(tail (tail (head (formula a))))] (esq a) (dir a) (isLeaf a)))) False
+        else case head (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a)))) of
                                                                                                                                           '&' -> Node ((formula a) ++
                                                                                                                                                    [(tail(fst (splitAt (splitAux 0 0 0 (head(formula a))) (head(formula a)))))] ++ 
                                                                                                                                                    [(init(tail (snd(splitAt (splitAux 0 0 0 (head(formula a))) (head (formula a))))))])
@@ -79,7 +81,7 @@ main = do
     
     entrada <- getLine
 
-    let a = removeInconveniences ("~(" ++ entrada ++ ")")
+    let a = removeInconveniences (if ((head entrada)== '~') && ((head (tail entrada))=='(')  then "~" ++ entrada else "~(" ++ entrada ++ ")")
 
 
     let node = Node [a] Empty Empty True
