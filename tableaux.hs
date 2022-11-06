@@ -42,35 +42,35 @@ makeTree a
                                                                                                                               '|' -> Node (formula a ++
                                                                                                                                        ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))] ++
                                                                                                                                        ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))])
-                                                                                                                                    Empty
-                                                                                                                                    Empty
+                                                                                                                                    (esq a)
+                                                                                                                                    (dir a)
                                                                                                                                     True
                                                                                                                               '>' -> Node (formula a ++
                                                                                                                                        [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))] ++
                                                                                                                                        ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))])
-                                                                                                                                    Empty
-                                                                                                                                    Empty
+                                                                                                                                    (esq a)
+                                                                                                                                    (dir a)
                                                                                                                                     True
                                                                                                                               '&' -> Node (formula a)
                                                                                                                                     (Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))] Empty Empty True)
                                                                                                                                     (Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))] Empty Empty True)
                                                                                                                                     False
-  | head(head (formula a)) == '~' && head(tail(head (formula a))) == '~' = Node (formula a ++ formula (makeTree (Node [tail (tail (head (formula a)))] (esq a) (dir a) (isLeaf a)))) (esq (makeTree (Node [tail (tail (head (formula a)))] (esq a) (dir a) (isLeaf a)))) (dir (makeTree (Node [tail (tail (head (formula a)))] (esq a) (dir a) (isLeaf a)))) False
+  | head(head (formula a)) == '~' && head(tail(head (formula a))) == '~' = Node (formula a ++ formula (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a) (isLeaf a)))) (esq (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a) (isLeaf a)))) (dir (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a) (isLeaf a)))) False
   | otherwise = case head (formula a) !! splitAux 0 0 0 (head(formula a)) of
-                                                                                                                                             '&' -> Node (formula a ++
-                                                                                                                                                      [tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] ++
-                                                                                                                                                      [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))])
-                                                                                                                                                   Empty
-                                                                                                                                                   Empty
-                                                                                                                                                   True
-                                                                                                                                             '>' -> Node (formula a)
-                                                                                                                                                   (Node ["~" ++ tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] Empty Empty True)
-                                                                                                                                                   (Node [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))] Empty Empty True)
-                                                                                                                                                   False
-                                                                                                                                             '|' -> Node (formula a)
-                                                                                                                                                   (Node [tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] Empty Empty True)
-                                                                                                                                                   (Node [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))] Empty Empty True)
-                                                                                                                                                   False
+                                                                                                                                '&' -> Node (formula a ++
+                                                                                                                                        [tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] ++
+                                                                                                                                        [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))])
+                                                                                                                                    (esq a)
+                                                                                                                                    (dir a)
+                                                                                                                                    True
+                                                                                                                                '>' -> Node (formula a)
+                                                                                                                                    (Node ["~" ++ tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] Empty Empty True)
+                                                                                                                                    (Node [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))] Empty Empty True)
+                                                                                                                                    False
+                                                                                                                                '|' -> Node (formula a)
+                                                                                                                                    (Node [tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] Empty Empty True)
+                                                                                                                                    (Node [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))] Empty Empty True)
+                                                                                                                                    False
 
  --splitAt (splitAux 0 0 0 (tail  (formula a))) (tail (formula a))
 
