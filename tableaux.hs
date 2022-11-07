@@ -158,6 +158,30 @@ makeTree a
                                             Empty
                                             Empty)))
 
+drawTreeAux :: Int -> String -> String
+drawTreeAux 0 b = b
+drawTreeAux a b = drawTreeAux (a-1) (b ++ "          ")
+         
+
+drawTree:: Node -> Int -> IO()
+drawTree Empty _ = print ""
+drawTree a andar = do
+    drawTree (esq a) (andar + 1)
+    putStr (drawTreeAux andar "")
+    print (formula a)
+    drawTree (dir a) (andar + 1)
+
+
+
+--   void imprime_aux(TAB* a, int andar)
+--     if isEmpty a{
+--     int j;
+--     imprime_aux(a->esq, andar + 1);
+--     for(j = 0; j <= andar; j++) printf("   ");
+--     printf("%d\n", a->info);
+--     imprime_aux(a->dir, andar + 1);
+                                         
+
  --splitAt (splitAux 0 0 0 (tail  (formula a))) (tail (formula a))
 
 
@@ -173,7 +197,10 @@ main = do
                                     "~(" ++ entrada ++ ")")
 
 
+
     let node = Node [a] Empty Empty
     let tree = makeTree node
     print a
     print tree
+    print " "
+    drawTree tree 1
