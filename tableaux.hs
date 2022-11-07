@@ -159,35 +159,78 @@ makeTree a
                                             Empty)))
 
 drawTreeAux :: Int -> String -> String
-drawTreeAux 0 b = b
+drawTreeAux 0 _ = ""
+drawTreeAux 1 b = b ++ "[-----  "
 drawTreeAux a b = drawTreeAux (a-1) (b ++ "          ")
-         
+
+printBlockAux :: Int -> String -> String
+printBlockAux 0 _ = ""
+printBlockAux 1 b = b ++ "        "
+printBlockAux a b = printBlockAux (a-1) (b ++ "          ")
+
+printBlock:: Int -> [String] -> String -> String -> IO()
+printBlock _ [] _ _ = putStr ""
+printBlock i f a v = 
+         if i == length f then do
+            putStr a
+            putStrLn (head f)
+            printBlock i (tail f) a v
+        else do
+            putStr v
+            putStrLn (head f)
+            printBlock i (tail f) a v
+
 
 drawTree:: Node -> Int -> IO()
-drawTree Empty _ = print ""
+drawTree Empty andar = do
+    putStr (drawTreeAux andar "          ")
+    print Empty
 drawTree a andar = do
     drawTree (esq a) (andar + 1)
-    putStr (drawTreeAux andar "")
-    print (formula a)
+    printBlock ((div (length(formula a)) 2) + 1)  (formula a) (drawTreeAux andar "          ") (printBlockAux andar "          ")
     drawTree (dir a) (andar + 1)
 
 
+findAtomsAux:: [String] -> [[String]] -> [[String]]
+findAtomsAux [] v = v
+findAtomsAux f v = 
+    if length (head f) <= 2 then
+         findAtomsAux (tail f) [(head v) ++ [head f]] 
+    else findAtomsAux (tail f) v
 
---   void imprime_aux(TAB* a, int andar)
---     if isEmpty a{
---     int j;
---     imprime_aux(a->esq, andar + 1);
---     for(j = 0; j <= andar; j++) printf("   ");
---     printf("%d\n", a->info);
---     imprime_aux(a->dir, andar + 1);
-                                         
+findAtoms:: Node -> [[String]] -> [[String]] 
+findAtoms a v 
+    | not (isEmpty (esq a)) = findAtoms (esq a) (findAtomsAux (formula a) v) ++ findAtoms (dir a) (findAtomsAux (formula a) v)
+    | otherwise = findAtomsAux (formula a) v
 
- --splitAt (splitAux 0 0 0 (tail  (formula a))) (tail (formula a))
+itHasContradition:: [String] -> Bool
+itHasContradition a
+    | length([e | e <-a, length e == 1, elem ("~" ++ e) a]) > 0 = True
+    | otherwise = False 
+    
+evaluateTree:: [[String]] -> [Bool]
+evaluateTree [] = [False]
+evaluateTree a = [itHasContradition e |e<-a]
+
+leavesWithContradition:: [Bool] -> [Int] -> Int -> [Int]
+leavesWithContradition [] _ _ = []
+leavesWithContradition (x:xs) r c 
+    |x == False = r ++ [c] ++ leavesWithContradition xs r (c+1)
+    |x == True = r ++ leavesWithContradition xs r (c+1)
+    |otherwise = leavesWithContradition xs r (c+1)
+
+isValid:: Node -> IO()
+isValid tree = do
+    let idxs = (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
+    if length idxs == 0 then do putStrLn "A fórmula é valida!"
+    else do 
+        putStr "A fórmula não é válida. Cheque o(s) seguinte(s) ramo(s) para buscar uma interpretação:  " 
+        print (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
 
 
 main :: IO()
 main = do
-    putStrLn "Insira uma formula logica"
+    putStrLn "Insira uma fórmula lógica"
 
     entrada <- getLine
 
@@ -200,7 +243,11 @@ main = do
 
     let node = Node [a] Empty Empty
     let tree = makeTree node
-    print a
-    print tree
-    print " "
-    drawTree tree 1
+
+    putStrLn "---------------------------------------------------------------------------------------------------------------------------------"
+    drawTree tree 0
+    putStrLn "---------------------------------------------------------------------------------------------------------------------------------"
+   -- print (findAtoms tree [[]])
+    isValid tree
+    --print (evaluateTree (findAtoms tree [[]]))
+    --print (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
