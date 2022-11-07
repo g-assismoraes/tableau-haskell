@@ -35,12 +35,22 @@ splitAux a b i (x:xs)
     | x == ')' = splitAux a (b+1) (i+1) xs
     | otherwise = splitAux a b (i+1) xs
 
+isEmpty:: Node -> Bool
+isEmpty Empty = True
+isEmpty _ = False
+
+graftTree:: Node -> Node -> Node
+graftTree Empty b = b 
+graftTree a Empty = a
+graftTree a b 
+    | isEmpty (esq a) = Node (formula a) (esq b) (dir b)
+    | otherwise = Node (formula a) (graftTree (esq a) b) (graftTree (dir a) b)
+
 data Node =
     Empty
     | Node {formula :: [String]
            ,esq :: Node
            ,dir :: Node
-           ,isLeaf:: Bool
 }deriving(Show)
 
 
@@ -52,42 +62,101 @@ makeTree a
     head(tail(head (formula a))) == '(' =
          case tail (head (formula a)) !! splitAux 0 0 0 (tail  (head(formula a))) of
             '|' -> Node (formula a ++
-                            ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))] ++
-                            ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))])
-                        (esq a)
-                        (dir a)
-                        True
+                            formula(makeTree(
+                                Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                (esq a)
+                                (dir a))) ++
+                            formula(makeTree(
+                                Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                (esq a)
+                                (dir a))))
+                        (graftTree (esq a) (esq (graftTree (makeTree( Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                                  Empty
+                                                  Empty))
+                                (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                         Empty
+                                         Empty)))))
+                        (graftTree (dir a) (dir (graftTree(makeTree( Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                                Empty
+                                                Empty))
+                                (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                         Empty
+                                         Empty)))))                       
             '>' -> Node (formula a ++
-                            [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))] ++
-                            ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))])
-                        (esq a)
-                        (dir a)
-                        True
+                            formula(makeTree(
+                                Node [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                (esq a)
+                                (dir a))) ++
+                            formula(makeTree(
+                                Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                (esq a)
+                                (dir a))))
+                        (graftTree (esq a) (esq (graftTree (makeTree( Node [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                                  Empty
+                                                  Empty))
+                                (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                         Empty
+                                         Empty)))))
+                        (graftTree (dir a) (dir (graftTree(makeTree( Node [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                                Empty
+                                                Empty))
+                                (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                         Empty
+                                         Empty))))) 
             '&' -> Node (formula a)
-                        (Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))] Empty Empty True)
-                        (Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))] Empty Empty True)
-                        False
+                        (graftTree (esq a)
+                                   (makeTree(Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
+                                            Empty
+                                            Empty)))
+                        (graftTree (dir a)
+                                   (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
+                                            Empty
+                                            Empty)))
   | head(head (formula a)) == '~' && head(tail(head (formula a))) == '~' =
-     Node (formula a ++ formula (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a) (isLeaf a))))
-          (esq (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a) (isLeaf a)))) 
-          (dir (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a) (isLeaf a))))
-          False
+     Node (formula a ++ formula (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a))))
+          (esq (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a)))) 
+          (dir (makeTree (Node [drop 2 (head (formula a))] (esq a) (dir a))))
   | otherwise =
         case head (formula a) !! splitAux 0 0 0 (head(formula a)) of
             '&' -> Node (formula a ++
-                            [tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] ++
-                            [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))])
-                        (esq a)
-                        (dir a)
-                        True
+                            formula(makeTree(
+                                Node [tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
+                                (esq a)
+                                (dir a))) ++
+                            formula(makeTree(
+                                Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
+                                (esq a)
+                                (dir a))))
+                        (graftTree (esq a) (esq (graftTree (makeTree( Node [tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
+                                                  Empty
+                                                  Empty))
+                                (makeTree(Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
+                                         Empty
+                                         Empty)))))
+                        (graftTree (dir a) (dir (graftTree(makeTree( Node [tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
+                                                Empty
+                                                Empty))
+                                (makeTree(Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
+                                         Empty
+                                         Empty)))))    
             '>' -> Node (formula a)
-                        (Node ["~" ++ tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] Empty Empty True)
-                        (Node [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))] Empty Empty True)
-                        False
+                        (graftTree (esq a)
+                                   (makeTree(Node ["~" ++ tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
+                                            Empty
+                                            Empty)))
+                        (graftTree (dir a)
+                                   (makeTree(Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
+                                            Empty
+                                            Empty)))
             '|' -> Node (formula a)
-                        (Node [tail(take (splitAux 0 0 0 (head(formula a))) (head(formula a)))] Empty Empty True)
-                        (Node [init(tail (drop (splitAux 0 0 0 (head(formula a))) (head (formula a))))] Empty Empty True)
-                        False
+                        (graftTree (esq a)
+                                   (makeTree(Node [tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
+                                            Empty
+                                            Empty)))
+                        (graftTree (dir a)
+                                   (makeTree(Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
+                                            Empty
+                                            Empty)))
 
  --splitAt (splitAux 0 0 0 (tail  (formula a))) (tail (formula a))
 
@@ -104,7 +173,7 @@ main = do
                                     "~(" ++ entrada ++ ")")
 
 
-    let node = Node [a] Empty Empty True
+    let node = Node [a] Empty Empty
     let tree = makeTree node
     print a
     print tree
