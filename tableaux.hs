@@ -15,6 +15,16 @@ removeInconveniences :: String -> String
 removeInconveniences " " = ""
 removeInconveniences a = [e | e<-a, e /= ' ', e /= '-']
 
+checaEnt:: Int -> Int -> String -> Int
+checaEnt _ _  [] = 0
+checaEnt a b (x:xs)
+    | x == '&' && a == b = 1
+    | x == '|' && a == b = 1
+    | x == '>' && a == b = 1
+    | x == '(' = checaEnt (a+1) b xs
+    | x == ')' = checaEnt a (b+1) xs
+    | otherwise = checaEnt a b xs
+
 splitAux:: Int -> Int -> Int -> String -> Int
 splitAux _ _ _  [] = -1
 splitAux a b i (x:xs)
@@ -37,6 +47,7 @@ data Node =
 makeTree:: Node -> Node
 makeTree Empty = Empty
 makeTree a
+  | length (head (formula a)) <= 2 = a
   | head(head (formula a)) == '~' &&
     head(tail(head (formula a))) == '(' =
          case tail (head (formula a)) !! splitAux 0 0 0 (tail  (head(formula a))) of
@@ -87,7 +98,7 @@ main = do
 
     entrada <- getLine
 
-    let a = removeInconveniences (if head entrada== '~' && (head (tail entrada)=='(') then
+    let a = removeInconveniences (if checaEnt 0 0 entrada == 0 then
                                      "~" ++ entrada 
                                  else 
                                     "~(" ++ entrada ++ ")")
