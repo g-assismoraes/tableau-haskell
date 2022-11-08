@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-module Main where
+module Tableaux where
 
 splitAt' :: Int -> [a] -> ([a], [a])
 splitAt' _ []
@@ -71,14 +71,14 @@ makeTree a
                                 (esq a)
                                 (dir a))))
                         (graftTree (esq a) (esq (graftTree (makeTree( Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
-                                                  Empty
-                                                  Empty))
+                                                                            Empty
+                                                                            Empty))
                                 (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
                                          Empty
                                          Empty)))))
                         (graftTree (dir a) (dir (graftTree(makeTree( Node ["~" ++ tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
-                                                Empty
-                                                Empty))
+                                                                    Empty
+                                                                    Empty))
                                 (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
                                          Empty
                                          Empty)))))                       
@@ -92,14 +92,14 @@ makeTree a
                                 (esq a)
                                 (dir a))))
                         (graftTree (esq a) (esq (graftTree (makeTree( Node [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
-                                                  Empty
-                                                  Empty))
+                                                                     Empty
+                                                                     Empty))
                                 (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
                                          Empty
                                          Empty)))))
                         (graftTree (dir a) (dir (graftTree(makeTree( Node [tail(take (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head(formula a))))]
-                                                Empty
-                                                Empty))
+                                                                     Empty
+                                                                     Empty))
                                 (makeTree(Node ["~" ++ init(tail (drop (splitAux 0 0 0 (tail  (head(formula a)))) (tail (head (formula a)))))]
                                          Empty
                                          Empty))))) 
@@ -128,14 +128,14 @@ makeTree a
                                 (esq a)
                                 (dir a))))
                         (graftTree (esq a) (esq (graftTree (makeTree( Node [tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
-                                                  Empty
-                                                  Empty))
+                                                                      Empty
+                                                                      Empty))
                                 (makeTree(Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
                                          Empty
                                          Empty)))))
                         (graftTree (dir a) (dir (graftTree(makeTree( Node [tail(take (splitAux 0 0 0 ((head(formula a)))) ((head(formula a))))]
-                                                Empty
-                                                Empty))
+                                                                     Empty
+                                                                     Empty))
                                 (makeTree(Node [init(tail (drop (splitAux 0 0 0 ((head(formula a)))) ((head (formula a)))))]
                                          Empty
                                          Empty)))))    
@@ -212,11 +212,19 @@ evaluateTree:: [[String]] -> [Bool]
 evaluateTree [] = [False]
 evaluateTree a = [itHasContradition e |e<-a]
 
+fetchInterpretation:: [String] -> [String]
+fetchInterpretation [] = []
+fetchInterpretation a = [e | e <- a, length e == 1, not(elem ("~" ++ e) a)] ++ [e | e <- a, length e == 2, not(elem (tail e) a)]
+
+fetchInterpretations:: [[String]] -> [[String]]
+fetchInterpretations [] = []
+fetchInterpretations a = [if (fetchInterpretation e) == [] then ["Ramo fechado!"] else e | e<-a]
+
 leavesWithContradition:: [Bool] -> [Int] -> Int -> [Int]
 leavesWithContradition [] _ _ = []
 leavesWithContradition (x:xs) r c 
-    |x == False = r ++ [c] ++ leavesWithContradition xs r (c+1)
-    |x == True = r ++ leavesWithContradition xs r (c+1)
+    |not x = r ++ [c] ++ leavesWithContradition xs r (c+1)
+    |x = r ++ leavesWithContradition xs r (c+1)
     |otherwise = leavesWithContradition xs r (c+1)
 
 isValid:: Node -> IO()
@@ -224,13 +232,18 @@ isValid tree = do
     let idxs = (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
     if length idxs == 0 then do putStrLn "A fórmula é valida!"
     else do 
-        putStr "A fórmula não é válida. Cheque o(s) seguinte(s) ramo(s) para buscar uma interpretação:  " 
-        print (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
+        putStr "A fórmula não é válida. Confira as interpretações da análise dos ramos:  " 
+        print (fetchInterpretations (findAtoms tree [[]]))
 
 
-main :: IO()
-main = do
-    putStrLn "Insira uma fórmula lógica"
+tableaux :: IO()
+tableaux = do
+
+    -- (p|(q&r))>((p|q)&(p|r)) 
+    -- a -> (a -> (b -> a))
+    -- b -> (a & (b & a))
+
+    putStr "Insira uma fórmula lógica: "
 
     entrada <- getLine
 
