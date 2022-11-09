@@ -16,7 +16,7 @@ checkEnt a b (x:xs)
     | otherwise = checkEnt a b xs
 
 splitAux:: Int -> Int -> Int -> String -> Int
-splitAux _ _ _  [] = -1
+splitAux _ _ _  [] = error "A entrada inserida apresenta alguma inconsistência!"
 splitAux a b i (x:xs)
     | x == '&' && a == b+1 = i
     | x == '|' && a == b+1 = i
