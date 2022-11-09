@@ -1,29 +1,19 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-module Tableaux where
-
-splitAt' :: Int -> [a] -> ([a], [a])
-splitAt' _ []
-    = ([], [])
-splitAt' n (x : xs)
-    = if n == 1
-      then ([], x : xs)
-      else (x : xs', xs'')
-  where
-    (xs', xs'') = splitAt' (n - 1) xs
+module Main where
 
 removeInconveniences :: String -> String
 removeInconveniences " " = ""
 removeInconveniences a = [e | e<-a, e /= ' ', e /= '-']
 
-checaEnt:: Int -> Int -> String -> Int
-checaEnt _ _  [] = 0
-checaEnt a b (x:xs)
+checkEnt:: Int -> Int -> String -> Int
+checkEnt _ _  [] = 0
+checkEnt a b (x:xs)
     | x == '&' && a == b = 1
     | x == '|' && a == b = 1
     | x == '>' && a == b = 1
-    | x == '(' = checaEnt (a+1) b xs
-    | x == ')' = checaEnt a (b+1) xs
-    | otherwise = checaEnt a b xs
+    | x == '(' = checkEnt (a+1) b xs
+    | x == ')' = checkEnt a (b+1) xs
+    | otherwise = checkEnt a b xs
 
 splitAux:: Int -> Int -> Int -> String -> Int
 splitAux _ _ _  [] = -1
@@ -39,19 +29,19 @@ isEmpty:: Node -> Bool
 isEmpty Empty = True
 isEmpty _ = False
 
-graftTree:: Node -> Node -> Node
-graftTree Empty b = b 
-graftTree a Empty = a
-graftTree a b 
-    | isEmpty (esq a) = Node (formula a) (esq b) (dir b)
-    | otherwise = Node (formula a) (graftTree (esq a) b) (graftTree (dir a) b)
-
 data Node =
     Empty
     | Node {formula :: [String]
            ,esq :: Node
            ,dir :: Node
 }deriving(Show)
+
+graftTree:: Node -> Node -> Node
+graftTree Empty b = b 
+graftTree a Empty = a
+graftTree a b 
+    | isEmpty (esq a) = Node (formula a) (esq b) (dir b)
+    | otherwise = Node (formula a) (graftTree (esq a) b) (graftTree (dir a) b)
 
 
 makeTree:: Node -> Node
@@ -158,11 +148,6 @@ makeTree a
                                             Empty
                                             Empty)))
 
-drawTreeAux :: Int -> String -> String
-drawTreeAux 0 _ = ""
-drawTreeAux 1 b = b ++ "[-----  "
-drawTreeAux a b = drawTreeAux (a-1) (b ++ "          ")
-
 printBlockAux :: Int -> String -> String
 printBlockAux 0 _ = ""
 printBlockAux 1 b = b ++ "        "
@@ -179,6 +164,12 @@ printBlock i f a v =
             putStr v
             putStrLn (head f)
             printBlock i (tail f) a v
+
+
+drawTreeAux :: Int -> String -> String
+drawTreeAux 0 _ = ""
+drawTreeAux 1 b = b ++ "[-----  "
+drawTreeAux a b = drawTreeAux (a-1) (b ++ "          ")
 
 
 drawTree:: Node -> Int -> IO()
@@ -198,27 +189,33 @@ findAtomsAux f v =
          findAtomsAux (tail f) [(head v) ++ [head f]] 
     else findAtomsAux (tail f) v
 
+
 findAtoms:: Node -> [[String]] -> [[String]] 
 findAtoms a v 
     | not (isEmpty (esq a)) = findAtoms (esq a) (findAtomsAux (formula a) v) ++ findAtoms (dir a) (findAtomsAux (formula a) v)
     | otherwise = findAtomsAux (formula a) v
+
 
 itHasContradition:: [String] -> Bool
 itHasContradition a
     | length([e | e <-a, length e == 1, elem ("~" ++ e) a]) > 0 = True
     | otherwise = False 
     
+
 evaluateTree:: [[String]] -> [Bool]
 evaluateTree [] = [False]
 evaluateTree a = [itHasContradition e |e<-a]
+
 
 fetchInterpretation:: [String] -> [String]
 fetchInterpretation [] = []
 fetchInterpretation a = [e | e <- a, length e == 1, not(elem ("~" ++ e) a)] ++ [e | e <- a, length e == 2, not(elem (tail e) a)]
 
+
 fetchInterpretations:: [[String]] -> [[String]]
 fetchInterpretations [] = []
 fetchInterpretations a = [if (fetchInterpretation e) == [] then ["Ramo fechado!"] else e | e<-a]
+
 
 leavesWithContradition:: [Bool] -> [Int] -> Int -> [Int]
 leavesWithContradition [] _ _ = []
@@ -226,6 +223,7 @@ leavesWithContradition (x:xs) r c
     |not x = r ++ [c] ++ leavesWithContradition xs r (c+1)
     |x = r ++ leavesWithContradition xs r (c+1)
     |otherwise = leavesWithContradition xs r (c+1)
+
 
 isValid:: Node -> IO()
 isValid tree = do
@@ -235,23 +233,21 @@ isValid tree = do
         putStr "A fórmula não é válida. Confira as interpretações da análise dos ramos:  " 
         print (fetchInterpretations (findAtoms tree [[]]))
 
-
-tableaux :: IO()
-tableaux = do
-
+tableau:: IO()
+tableau = do
     -- (p|(q&r))>((p|q)&(p|r)) 
     -- a -> (a -> (b -> a))
     -- b -> (a & (b & a))
+    -- (x&~x)|(y&~y)
 
-    putStr "Insira uma fórmula lógica: "
+    putStrLn "Insira uma fórmula lógica: "
 
     entrada <- getLine
 
-    let a = removeInconveniences (if checaEnt 0 0 entrada == 0 then
+    let a = removeInconveniences (if checkEnt 0 0 entrada == 0 then
                                      "~" ++ entrada 
                                  else 
                                     "~(" ++ entrada ++ ")")
-
 
 
     let node = Node [a] Empty Empty
@@ -260,7 +256,10 @@ tableaux = do
     putStrLn "---------------------------------------------------------------------------------------------------------------------------------"
     drawTree tree 0
     putStrLn "---------------------------------------------------------------------------------------------------------------------------------"
-   -- print (findAtoms tree [[]])
     isValid tree
-    --print (evaluateTree (findAtoms tree [[]]))
-    --print (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
+
+
+main :: IO()
+main = do
+    tableau
+    
