@@ -228,9 +228,9 @@ leavesWithNoContradition (x:xs) r c
 isValid:: Node -> IO()
 isValid tree = do
     let idxs = (leavesWithNoContradition (evaluateTree (findAtoms tree [[]])) [] 1)
-    if length idxs == 0 then do putStrLn "A fórmula inserida é valida!"
+    if length idxs == 0 then do putStrLn "A fórmula inserida não é falsificável!"
     else do 
-        putStr "A fórmula inserida não é válida. Confira as interpretações da análise dos ramos que a negativam:  " 
+        putStr "A fórmula inserida é falsificável. Confira as interpretações da análise dos ramos que a negativam:  " 
         print (fetchInterpretations (findAtoms tree [[]]))
 
 tableau:: IO()
