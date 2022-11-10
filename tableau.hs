@@ -217,17 +217,17 @@ fetchInterpretations [] = []
 fetchInterpretations a = [if (fetchInterpretation e) == [] then ["Ramo fechado!"] else e | e<-a]
 
 
-leavesWithContradition:: [Bool] -> [Int] -> Int -> [Int]
-leavesWithContradition [] _ _ = []
-leavesWithContradition (x:xs) r c 
-    |not x = r ++ [c] ++ leavesWithContradition xs r (c+1)
-    |x = r ++ leavesWithContradition xs r (c+1)
-    |otherwise = leavesWithContradition xs r (c+1)
+leavesWithNoContradition:: [Bool] -> [Int] -> Int -> [Int]
+leavesWithNoContradition [] _ _ = []
+leavesWithNoContradition (x:xs) r c 
+    |not x = r ++ [c] ++ leavesWithNoContradition xs r (c+1)
+    |x = r ++ leavesWithNoContradition xs r (c+1)
+    |otherwise = leavesWithNoContradition xs r (c+1)
 
 
 isValid:: Node -> IO()
 isValid tree = do
-    let idxs = (leavesWithContradition (evaluateTree (findAtoms tree [[]])) [] 1)
+    let idxs = (leavesWithNoContradition (evaluateTree (findAtoms tree [[]])) [] 1)
     if length idxs == 0 then do putStrLn "A fórmula é valida!"
     else do 
         putStr "A fórmula não é válida. Confira as interpretações da análise dos ramos:  " 
@@ -252,6 +252,8 @@ tableau = do
 
     let node = Node [a] Empty Empty
     let tree = makeTree node
+
+    print (leavesWithNoContradition (evaluateTree (findAtoms tree [[]])) [] 1)
 
     putStrLn "---------------------------------------------------------------------------------------------------------------------------------"
     drawTree tree 0
