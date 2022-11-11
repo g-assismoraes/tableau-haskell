@@ -209,7 +209,11 @@ evaluateTree a = [itHasContradition e |e<-a]
 
 fetchInterpretation:: [String] -> [String]
 fetchInterpretation [] = []
-fetchInterpretation a = [e | e <- a, length e == 1, not(elem ("~" ++ e) a)] ++ [e | e <- a, length e == 2, not(elem (tail e) a)]
+fetchInterpretation a = 
+    if not (itHasContradition a) then
+        [e | e <- a, length e == 1, not(elem ("~" ++ e) a)] ++ [e | e <- a, length e == 2, not(elem (tail e) a)]
+    else
+        []
 
 
 fetchInterpretations:: [[String]] -> [[String]]
